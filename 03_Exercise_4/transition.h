@@ -7,40 +7,60 @@
 
 // Transition:
 // TODO
-template<unsigned int N = 1, unsigned int M = 1>
-SC_MODULE(transition)
-{
+//task2 - Multiports, N = input ports, M = output ports, L = inhibitor ports
+template<unsigned int N = 1, unsigned int M = 1, unsigned int L=0>
+SC_MODULE(transition){
+
+
     public:
     sc_port<placeInterface, N, SC_ALL_BOUND> in;
     sc_port<placeInterface, M, SC_ALL_BOUND> out;
+    sc_port<placeInterface, L, SC_ZERO_OR_MORE_BOUND> inhibitors;
 
-    SC_CTOR(transition){}
 
-    void fire(){
-
-        int can_fire = 1;
-
-        for(int i = 0; i < N; i++) {
-            if (in[i]->testTokens() < 1) {
-                can_fire = 0;
+    SC_CTOR(transition){};
+    
+    void fire()
+    {
+        bool fireFlag = true;
+        bool inhib = true; //none of the inhibitor inputs have tokens
+        for(unsigned int i = 0; i < N; i++)
+        {
+            if(in[i]->testTokens() == false) //even if one input port does not have token, it can not fire
+            {   
+                fireFlag = false;
                 break;
+            };
+        }
+
+        for(unsigned int i = 0; i < L; i++)
+        {
+            if(inhibitors[i]->testTokens() == true) //even if one input port does not have token, it can not fire
+            {   
+                inhib = false;
+                break;
+            };
+        }
+        //if the fireFlag stays true, then the transition can fire, else it can't
+        if(fireFlag && inhib) //input ports have tokens and inhibitors don't
+        {
+            std::cout << this->name() << " Fired" <<std::endl;
+            for(unsigned int j = 0; j < N ; j++)
+            {
+                in[j]->removeTokens();
+            }
+            for(unsigned int j = 0; j < M ; j++)
+            {
+                out[j]->addTokens();
             }
         }
-
-        if(can_fire){
-            std::cout << this->name() << ": Fired" << std::endl;
-
-            // remove one token from each in port
-            for(int i = 0; i < N; i++)
-            in[i]->removeTokens();
-
-            // add one token to each out port
-            for(int i = 0; i < M; i++)
-            out[i]->addTokens();
-        } else {
-            std::cout << this->name() << ": NOT Fired" << std::endl;
+        else
+        {
+            std::cout << this->name() << " NOT Fired" << std::endl;
         }
+        
     }
+
 };
 
 #endif // TRANSITION_H

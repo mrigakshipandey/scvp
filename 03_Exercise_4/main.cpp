@@ -6,51 +6,57 @@
 
 // Toplevel:
 // TODO
-SC_MODULE(toplevel){
-    transition<1,1> ACT, RD, PRE, WR;
-    place<1,1> IDLE, ACTIVE;
 
-       
-    SC_CTOR(toplevel): ACT("ACT"), RD("RD"), PRE("PRE"), WR("WR"), IDLE(1), ACTIVE(0) //  Petri Net (PN) as described in Fig. 3
-    {
+SC_MODULE(toplevel)
+{
+    public:
+    place<1,1> IDLE;
+    subnet<1,1> s1,s2;
+    
+
+    SC_CTOR(toplevel): IDLE(2),s1("s1"), s2("s2")//, ACTIVE(0), ACT("ACT"), RD("RD"), PRE("PRE"), WR("WR")
+    {   
+        s1.IDLE.bind(IDLE);
+        s2.IDLE.bind(IDLE);
+
         SC_THREAD(process);
-
-        // Petri Net (PN) as described in Fig. 3
-        PRE.out.bind(IDLE);
-        ACT.in.bind(IDLE);
-
-        ACT.out.bind(ACTIVE);
-        RD.out.bind(ACTIVE);
-        WR.out.bind(ACTIVE);
-        PRE.in.bind(ACTIVE);
-        RD.in.bind(ACTIVE);
-        WR.in.bind(ACTIVE);
     }
 
-    void process(){
-        while(true) {
+    void process()
+    {
+        while(true)
+        {
             wait(10, SC_NS);
-            ACT.fire();
+            s1.ACT.fire();
             wait(10, SC_NS);
-            ACT.fire();
+            s1.ACT.fire();
             wait(10, SC_NS);
-            RD.fire();
+            s1.RD.fire();
             wait(10, SC_NS);
-            WR.fire();
+            s1.WR.fire();
             wait(10, SC_NS);
-            PRE.fire();
+            s1.PRE.fire();
             wait(10, SC_NS);
-            ACT.fire();
+            s1.ACT.fire();
+            wait(10, SC_NS);
+            s2.ACT.fire();
+            wait(10, SC_NS);
+            s2.ACT.fire();
+            wait(10, SC_NS);
+            s1.PRE.fire();
+            wait(10, SC_NS);
+            s2.PRE.fire();
+            wait(10, SC_NS);
             sc_stop();
         }
     }
+
 };
 
 int sc_main(int, char**)
 {
     // TODO
     toplevel t("t");
-
     sc_start();
     return 0;
 }
