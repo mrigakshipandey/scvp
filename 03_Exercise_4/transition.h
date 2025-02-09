@@ -7,23 +7,36 @@
 
 // Transition:
 // TODO
-SC_MODULE(transition){
-
-    sc_port<placeInterface> in;
-    sc_port<placeInterface> out;
+template<unsigned int N = 1, unsigned int M = 1>
+SC_MODULE(transition)
+{
+    public:
+    sc_port<placeInterface, N, SC_ALL_BOUND> in;
+    sc_port<placeInterface, M, SC_ALL_BOUND> out;
 
     SC_CTOR(transition){}
 
     void fire(){
-        // -> to access methods for standard ports
-        if(in->testTokens() != 0){
+
+        int can_fire = 1;
+
+        for(int i = 0; i < N; i++) {
+            if (in[i]->testTokens() < 1) {
+                can_fire = 0;
+                break;
+            }
+        }
+        
+        if(can_fire){
             std::cout << this->name() << ": Fired" << std::endl;
 
-            // remove one token from the in port
-            in->removeTokens(1);
+            // remove one token from each in port
+            for(int i = 0; i < N; i++)
+            in[i]->removeTokens(1);
 
-            // add one token to the out port
-            out->addTokens(1);
+            // add one token to each out port
+            for(int i = 0; i < M; i++)
+            out[i]->addTokens(1);
         } else {
             std::cout << this->name() << ": NOT Fired" << std::endl;
         }
