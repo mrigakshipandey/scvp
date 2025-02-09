@@ -10,7 +10,7 @@ SC_MODULE(toplevel){
     transition<1,2> t1; 
     transition<2,1> t2;
     transition<1,1> t3;
-    place p1, p2, p3, p4;
+    place<1,1> p1, p2, p3, p4;
 
        
     SC_CTOR(toplevel): t1("t1"), t2("t2"), t3("t3"), p1(1), p2(0), p3(0), p4(0) //  Petri Net (PN) as described in Fig. 2

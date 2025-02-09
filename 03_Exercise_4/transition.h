@@ -26,17 +26,17 @@ SC_MODULE(transition)
                 break;
             }
         }
-        
+
         if(can_fire){
             std::cout << this->name() << ": Fired" << std::endl;
 
             // remove one token from each in port
             for(int i = 0; i < N; i++)
-            in[i]->removeTokens(1);
+            in[i]->removeTokens();
 
             // add one token to each out port
             for(int i = 0; i < M; i++)
-            out[i]->addTokens(1);
+            out[i]->addTokens();
         } else {
             std::cout << this->name() << ": NOT Fired" << std::endl;
         }
