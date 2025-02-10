@@ -22,6 +22,7 @@ int sc_main (int, char **)
     memory0.tSocket.bind(bus0.iSocket[0]);
     memory1.tSocket.bind(bus0.iSocket[1]);
 
+    /*
     std::cout << std::endl << "Name "
               << std::setfill(' ') << std::setw(10)
               << "Time" << " "
@@ -34,10 +35,10 @@ int sc_main (int, char **)
               << "Data"
               << " " << std::endl
               << "-------------------------------------------"
-              << std::endl;
+              << std::endl; */
 
     sc_start();
 
-    std::cout << std::endl;
+    //std::cout << std::endl;
     return 0;
 }

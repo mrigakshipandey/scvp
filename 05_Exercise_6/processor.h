@@ -19,6 +19,9 @@ private:
 	std::ifstream file;
 	sc_time cycleTime;
 
+	// add a quantum keeper
+	tlm_utils::tlm_quantumkeeper quantumKeeper;
+
 	// Method:
     void processTrace();
     void processRandom();
@@ -55,7 +58,12 @@ processor::processor(sc_module_name, std::string pathToFile, sc_time cycleTime) 
 		SC_REPORT_FATAL(name(), "Could not open trace");
 
     // register the process with the kernel
-	SC_THREAD(processTrace);
+	SC_THREAD(processRandom); // File rad takes too much time
+
+	// set a global quantum
+	quantumKeeper.set_global_quantum(sc_time(100000,SC_NS)); 
+	// initialize a global quantum
+    quantumKeeper.reset();
 
 	// bind the socket
 	iSocket.bind(*this);
@@ -181,6 +189,7 @@ void processor::processTrace()
 		wait(delay);
 
 #if 1
+		/*
 		std::cout << std::setfill(' ') << std::setw(4)
 			<< name() << " "
 			<< std::setfill(' ') << std::setw(10)
@@ -198,7 +207,7 @@ void processor::processTrace()
 			<< (unsigned int)data[2]
 			<< std::setfill('0') << std::setw(2)
 			<< (unsigned int)data[3]
-			<< std::endl;
+			<< std::endl; */
 #endif
 	}
 
@@ -233,12 +242,19 @@ void processor::processRandom()
         cycles = distrCycle(randGenerator);
         address = distrAddr(randGenerator);
 
-        sc_time delay = cycles * cycleTime;
+        // sc_time delay = cycles * cycleTime;
+		 sc_time delay = quantumKeeper.get_local_time() + cycles * cycleTime;
 
         trans.set_address(address);
         iSocket->b_transport(trans, delay);
 
-        wait(delay);
+        // wait(delay);
+		quantumKeeper.set(delay);
+		if(quantumKeeper.need_sync())
+		{
+			quantumKeeper.sync();
+			
+		}
     }
 
     // End Simulation because there are no events.
