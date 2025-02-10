@@ -1,6 +1,5 @@
 # SystemC and Virtual Prototyping
-## Exercise 2
-### Task 1 - NAND Gate
+## Simple Combinational Blocks
 Format for a combinational block
 ```
 SC_MODULE(<name>)
@@ -20,24 +19,15 @@ SC_MODULE(<name>)
     }
 }
 ```
-Format for a top level module to test the combinational block, same as a module composed of other SystemC modules
+A Test Module - Atomic in nature, shows delta cycles for a single computation
 ```
 SC_MODULE(toplevel)
 {
-public:
-    SC_CTOR(toplevel) : b("b"), var(0)
-    {
-        // bind all ports
-
-        SC_METHOD(process);
-        sensitive << ; // add all ports
-    }
-
 private:
     block b;
     unsigned int var;
 
-    // declare IO signals and helper signals
+    // declare IO / helper signals corresponding to the ports
 
     void process()
     {
@@ -49,26 +39,104 @@ private:
         << " simulation time " << sc_time_stamp().to_default_time_units()
         << " ps Δ cycle " << sc_delta_count()
         << std::endl;
+    }
+
+    public:
+    SC_CTOR(toplevel) : b("b"), var(0) // Instantiate all modules and signals
+    {
+        // bind all ports to signals
+
+        SC_METHOD(process);
+        sensitive << ; // add all signals 
+    }
+
 };
+```
+For Testing in a Sequential Fashion, we can create Stimulus and Monitor Modules
+```
+SC_MODULE(stim)
+{
+public:
+    sc_out<bool> A, B;
+    sc_in<bool> clk; //task4
+
+    SC_CTOR(stim)
+    {
+        SC_THREAD(StimGen);
+        sensitive << clk.pos(); //task4
+    }
+
+private:
+    void StimGen()
+    {
+        wait();//wait(SC_ZERO_TIME);
+        A.write(false);
+        B.write(false);
+        wait();//wait(10, SC_NS);
+        A.write(false);
+        B.write(true);
+        wait();//wait(15, SC_NS);
+        A.write(true);
+        B.write(false);
+        wait();//wait(10, SC_NS);
+        A.write(true);
+        B.write(true);
+        wait();//wait(10, SC_NS);
+        A.write(false);
+        B.write(false);
+        wait();//wait(10, SC_NS);
+        sc_stop();
+    }
+};
+
+SC_MODULE(Monitor)
+{
+public:
+    sc_in<bool> A, B, Z;
+    sc_in<bool> clk; 
+
+    SC_CTOR(Monitor)
+    {
+        std::cout << std::endl <<  "time\tA\tB\tZ" << std::endl;
+        SC_METHOD(monitor);
+        sensitive << clk.pos(); //task4
+        //sensitive << A << B << Z;
+        dont_initialize();
+    }
+
+private:
+    void monitor()
+    {
+        std::cout << sc_time_stamp()  << "\t" << A << "\t" << B << "\t" << Z << std::endl;
+    }
+};
+```
+These can finally be connected in the main call
+```
 
 int sc_main(int, char**)
 {
-    toplevel top("toplevel");
+    sc_signal<bool> sigals...;
+    sc_clock clock("<name>",<time>, <unit eg. SC_NS>); 
 
-    // Simulation starts here.
-    sc_start();
+    // Declare modules
+    // bind signals
 
-    // Return zero after the end of the simulation.
+    //setup waveform tracing 
+    sc_trace_file *wf = sc_create_vcd_trace_file("traceFile_EXOR");
+    sc_trace(wf, <signal name>,"<display name>");
+    sc_start();  // run forever
+    sc_close_vcd_trace_file(wf); 
+
     return 0;
 }
+}
 ```
-### Task 2 - XOR Gate
 SC_METHOD - Combinational logic, without wait
 
 SC_THREAD - Sequential Logic, When we need to use wait statements
 
-## Exercise 4
-### Task 1 - Custom sc_interface
+## Custom sc_interface
 An Interface only describes the behaviour of the channel using pure virtual methods
 ```
 class <interface_name>: public sc_interface
@@ -94,7 +162,7 @@ class <channel_name>: public <interface_name>
     // implements methods
 };
 ```
-Then we can write a Module that implements those methods
+Then we can write a Module that calls those methods
 ```
 SC_MODULE(<module_name>){
 
@@ -106,4 +174,4 @@ SC_MODULE(<module_name>){
     ...
 };
 ```
-We can bind the module ports to the channel in the top-level module 
+We can bind the module ports to the channel in the top-level module , then start simulation in the main call
