@@ -1,6 +1,7 @@
 # SystemC and Virtual Prototyping
 ## Simple Combinational Blocks
 Format for a combinational block
+sc_in and sc_out are actually short forms for sc_port<>
 ```
 SC_MODULE(<name>)
 {
@@ -162,7 +163,7 @@ class <channel_name>: public <interface_name>
     // implements methods
 };
 ```
-Then we can write a Module that calls those methods
+Then we can write a Module that has the interface ports, not that this can only use threads with waits
 ```
 SC_MODULE(<module_name>){
 
@@ -175,3 +176,16 @@ SC_MODULE(<module_name>){
 };
 ```
 We can bind the module ports to the channel in the top-level module , then start simulation in the main call
+
+Static Ports have to be specified in Elaborate phase, We can create port arrays but those are also static, we can create multiports with full syntax and ZERO_OR_MORE_BOUND policy to create port dynamically, multiple drivers can be bound to the same channel
+
+## Primitive Channels
+These are passive unlike Modules that are active. We can also create Hierachial channels that are both
+
+sc_signal - an event is generated only if old signal and new signal are different
+
+sc_buffer - an event is generated everty time write() is called
+
+sc_fifo - read(), write(), nb_read(), nb_write(), num_free(). num_available()
+
+Smaphore & Mutex
